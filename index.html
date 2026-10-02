@@ -1,0 +1,681 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Для Насти 💌</title>
+
+<style>
+*{box-sizing:border-box}
+
+html,body{
+    margin:0;
+    min-height:100%;
+    font-family:Georgia,'Times New Roman',serif
+}
+
+body{
+    background:#020204;
+    color:#fff;
+    overflow-x:hidden
+}
+
+.root{
+    min-height:100vh;
+    display:grid;
+    place-items:center;
+    padding:32px 18px;
+    position:relative;
+    overflow:hidden;
+    background:radial-gradient(
+        circle at 50% 45%,
+        #171027 0,
+        #07070d 38%,
+        #010102 78%
+    )
+}
+
+.root:before{
+    content:'';
+    position:absolute;
+    inset:-30%;
+    background:conic-gradient(
+        from 0deg,
+        transparent,
+        #9d3cff18,
+        transparent,
+        #ff3d8d18,
+        transparent,
+        #39bfff18,
+        transparent
+    );
+    animation:aurora 12s linear infinite;
+    filter:blur(30px)
+}
+
+.stars{
+    position:absolute;
+    inset:0;
+    background-image:
+        radial-gradient(circle,#fff 1px,transparent 1.5px),
+        radial-gradient(circle,#a86bff 1px,transparent 1.5px);
+    background-size:97px 113px,157px 181px;
+    background-position:20px 30px,70px 90px;
+    opacity:.3;
+    animation:stars 8s linear infinite
+}
+
+.burst{
+    position:fixed;
+    left:50%;
+    top:50%;
+    width:0;
+    height:0;
+    z-index:20;
+    pointer-events:none
+}
+
+.particle{
+    position:absolute;
+    opacity:0;
+    animation:burst 1.8s cubic-bezier(.12,.7,.18,1) forwards;
+    text-shadow:0 0 14px currentColor
+}
+
+.heart{
+    color:#ff5caa;
+    font-size:24px;
+    width:auto;
+    height:auto
+}
+
+.flower{
+    font-size:22px;
+    width:auto;
+    height:auto
+}
+
+.spark{
+    width:6px;
+    height:6px;
+    background:#fff;
+    border-radius:50%;
+    box-shadow:
+        0 0 8px #fff,
+        0 0 20px #ffd86b
+}
+
+.ring{
+    position:absolute;
+    width:20px;
+    height:20px;
+    border:2px solid #ff6bc7;
+    border-radius:50%;
+    opacity:0;
+    animation:ring 1.6s ease-out forwards
+}
+
+@keyframes burst{
+    0%{
+        opacity:0;
+        transform:
+            translate(-50%,-50%)
+            scale(.1)
+            rotate(0)
+    }
+
+    12%{
+        opacity:1
+    }
+
+    100%{
+        opacity:0;
+        transform:
+            translate(
+                calc(-50% + var(--x)),
+                calc(-50% + var(--y))
+            )
+            rotate(var(--r))
+            scale(var(--s))
+    }
+}
+
+@keyframes ring{
+    0%{
+        opacity:.9;
+        transform:
+            translate(-50%,-50%)
+            scale(.1)
+    }
+
+    100%{
+        opacity:0;
+        transform:
+            translate(-50%,-50%)
+            scale(25)
+    }
+}
+
+@keyframes aurora{
+    to{
+        transform:rotate(360deg)
+    }
+}
+
+@keyframes stars{
+    to{
+        background-position:
+            20px 143px,
+            70px 271px
+    }
+}
+
+.content{
+    position:relative;
+    z-index:5;
+    width:min(850px,94vw);
+    text-align:center
+}
+
+.intro{
+    font-size:clamp(13px,2vw,16px);
+    letter-spacing:5px;
+    text-transform:uppercase;
+    color:#a99dbd;
+    margin-bottom:28px;
+    opacity:.8
+}
+
+.button{
+    position:relative;
+    display:block;
+    margin:auto;
+
+    border:1px solid #c96cff;
+
+    background:
+        linear-gradient(
+            110deg,
+            #7c2cff,
+            #ff3c9d,
+            #6b6cff,
+            #d34cff
+        );
+
+    background-size:300% 100%;
+
+    color:#fff;
+
+    padding:18px 48px;
+
+    border-radius:999px;
+
+    font:inherit;
+    font-size:18px;
+    letter-spacing:2px;
+
+    cursor:pointer;
+
+    box-shadow:
+        0 0 18px #a33cffaa,
+        0 0 50px #ff3c9d55,
+        inset 0 0 20px #fff3;
+
+    animation:
+        shine 3s linear infinite,
+        glow 2s ease-in-out infinite alternate;
+
+    transition:.25s
+}
+
+.button:before{
+    content:'';
+    position:absolute;
+    inset:-7px;
+    border-radius:999px;
+    border:1px solid #ff7fda55;
+    animation:pulse 2s ease-in-out infinite
+}
+
+.button:hover{
+    transform:scale(1.05)
+}
+
+.button:active{
+    transform:scale(.96)
+}
+
+@keyframes shine{
+    to{
+        background-position:300% 0
+    }
+}
+
+@keyframes glow{
+    to{
+        box-shadow:
+            0 0 30px #a33cffdd,
+            0 0 80px #ff3c9d88,
+            inset 0 0 25px #fff5
+    }
+}
+
+@keyframes pulse{
+    50%{
+        transform:scale(1.08);
+        opacity:.2
+    }
+}
+
+.hint{
+    color:#81788f;
+    font-size:13px;
+    margin-top:18px
+}
+
+.letter{
+    margin:55px auto 0;
+    width:min(760px,100%);
+    text-align:left;
+
+    opacity:0;
+
+    transform:
+        translateY(25px)
+        scale(.97);
+
+    transition:1s ease;
+
+    filter:drop-shadow(
+        0 0 30px #b64cff22
+    )
+}
+
+.revealed .letter{
+    opacity:1;
+    transform:none
+}
+
+.title{
+    text-align:center;
+
+    font-size:clamp(35px,7vw,64px);
+
+    font-weight:400;
+
+    margin:0 0 38px;
+
+    color:#fff;
+
+    text-shadow:
+        0 0 15px #ff5db7,
+        0 0 45px #9d4dff77
+}
+
+.line{
+    height:1px;
+
+    background:
+        linear-gradient(
+            90deg,
+            transparent,
+            #ff70ca,
+            transparent
+        );
+
+    margin:0 auto 35px
+}
+
+.message{
+    font-size:clamp(18px,2.4vw,23px);
+    line-height:1.8;
+    color:#eee
+}
+
+.message p{
+    margin:0 0 22px;
+    min-height:1.8em
+}
+
+.signature{
+    text-align:right;
+
+    font-style:italic;
+
+    margin-top:38px;
+
+    font-size:20px;
+
+    color:#ffacd9;
+
+    text-shadow:
+        0 0 12px #ff4fa4
+}
+
+@media(max-width:600px){
+
+    .root{
+        padding:24px 14px
+    }
+
+    .button{
+        padding:16px 35px
+    }
+
+    .letter{
+        margin-top:40px
+    }
+
+    .message{
+        line-height:1.7
+    }
+
+    .intro{
+        letter-spacing:3px
+    }
+}
+</style>
+</head>
+
+
+<body>
+
+<div class="root" id="app">
+
+    <div class="stars"></div>
+
+    <div class="burst" id="burst"></div>
+
+    <div class="content">
+
+        <div class="intro">
+            для Насти ♡
+        </div>
+
+
+        <button
+            class="button"
+            id="openBtn"
+        >
+            Открыть письмо
+        </button>
+
+
+        <div class="hint">
+            нажми — и просто посмотри
+        </div>
+
+
+        <article
+            class="letter"
+            id="letter"
+        >
+
+            <h1 class="title">
+                Насти
+            </h1>
+
+            <div class="line"></div>
+
+
+            <div class="message">
+
+                <p
+                    data-text="Просто хотел сказать, что ты со всем справишься. Ты самая лучшая."
+                ></p>
+
+
+                <p
+                    data-text="Очень хочу поднять тебе настроение и показать, что ты не одна."
+                ></p>
+
+
+                <p
+                    data-text="Что бы ни происходило — я верю в тебя и знаю, что ты со всем справишься."
+                ></p>
+
+
+                <p
+                    data-text="Так что не сдавайся. Я очень хочу, чтобы ты всегда помнила, что рядом есть человек, который очень сильно в тебя верит."
+                ></p>
+
+            </div>
+
+
+            <div class="signature">
+                От твоего преданного фаната
+                <br>
+                ♥
+            </div>
+
+        </article>
+
+    </div>
+
+</div>
+
+
+<script>
+
+const b =
+    document.getElementById('openBtn');
+
+const app =
+    document.getElementById('app');
+
+const burst =
+    document.getElementById('burst');
+
+const letter =
+    document.getElementById('letter');
+
+
+function makeBurst(){
+
+    const items = [
+        '♥',
+        '✿',
+        '✦',
+        '•',
+        '❀',
+        '♥',
+        '✧',
+        '🌸',
+        '•',
+        '♡',
+        '✦',
+        '❀',
+        '✿',
+        '♥',
+        '✧',
+        '•',
+        '🌷',
+        '♡',
+        '✦',
+        '❀',
+        '♥',
+        '✿',
+        '•',
+        '✦'
+    ];
+
+
+    items.forEach((v,i)=>{
+
+        const p =
+            document.createElement('span');
+
+
+        p.className =
+            'particle ' +
+            (
+                v === '♥' || v === '♡'
+                ? 'heart'
+                : v === '•'
+                ? 'spark'
+                : 'flower'
+            );
+
+
+        p.textContent =
+            v === '♥' ||
+            v === '♡' ||
+            v === '•'
+            ? ''
+            : v;
+
+
+        const a =
+            i / items.length *
+            Math.PI *
+            2 +
+            (Math.random() - .5) * .3;
+
+
+        const d =
+            150 +
+            Math.random() * 430;
+
+
+        p.style.setProperty(
+            '--x',
+            Math.cos(a) * d + 'px'
+        );
+
+
+        p.style.setProperty(
+            '--y',
+            Math.sin(a) * d + 'px'
+        );
+
+
+        p.style.setProperty(
+            '--r',
+            (Math.random() * 720 - 360) + 'deg'
+        );
+
+
+        p.style.setProperty(
+            '--s',
+            (.7 + Math.random() * 1.6).toFixed(2)
+        );
+
+
+        p.style.animationDelay =
+            (i * .035) + 's';
+
+
+        burst.appendChild(p);
+
+
+        setTimeout(
+            () => p.remove(),
+            2300
+        );
+
+    });
+
+
+    for(let i=0;i<5;i++){
+
+        const r =
+            document.createElement('span');
+
+        r.className =
+            'ring';
+
+        r.style.animationDelay =
+            (i * .12) + 's';
+
+        burst.appendChild(r);
+
+
+        setTimeout(
+            () => r.remove(),
+            1900
+        );
+    }
+}
+
+
+function typeText(){
+
+    document
+        .querySelectorAll('[data-text]')
+        .forEach((p,index)=>{
+
+            const text =
+                p.dataset.text;
+
+            let i = 0;
+
+
+            setTimeout(()=>{
+
+                const timer =
+                    setInterval(()=>{
+
+                        p.textContent =
+                            text.slice(
+                                0,
+                                ++i
+                            );
+
+
+                        if(
+                            i >= text.length
+                        ){
+                            clearInterval(timer);
+                        }
+
+                    },30);
+
+            },index * 1100);
+
+        });
+}
+
+
+function openLetter(){
+
+    if(
+        app.classList.contains(
+            'revealed'
+        )
+    ){
+        return;
+    }
+
+
+    app.classList.add(
+        'revealed'
+    );
+
+
+    b.textContent = '♡';
+
+    b.style.opacity = '.15';
+
+    b.style.pointerEvents =
+        'none';
+
+
+    makeBurst();
+
+
+    setTimeout(
+        typeText,
+        650
+    );
+}
+
+
+b.addEventListener(
+    'click',
+    openLetter
+);
+
+</script>
+
+</body>
+</html>
