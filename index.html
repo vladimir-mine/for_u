@@ -374,6 +374,18 @@ body{
         letter-spacing:3px
     }
 }
+
+.sky{display:none;opacity:0;transition:opacity 1.6s ease;margin:70px auto 20px;text-align:center}
+.sky.on{display:block}
+.sky.show{opacity:1}
+.sky-title{font-size:clamp(22px,4vw,32px);color:#ffd0ea;text-shadow:0 0 14px #ff4fa4;margin-bottom:6px}
+.sky-sub{color:#81788f;font-size:13px;margin-bottom:10px}
+.sky-wrap{width:min(560px,100%);aspect-ratio:1/1;margin:0 auto}
+.sky-wrap canvas{width:100%;height:100%;display:block;cursor:grab;touch-action:pan-y}
+.sky-wrap canvas:active{cursor:grabbing}
+.sky-card{min-height:3.4em;margin:6px auto 0;max-width:620px;font-size:clamp(18px,3vw,24px);line-height:1.5;color:#ffe3f3;text-shadow:0 0 14px #ff5db7aa;transition:opacity .35s}
+.sky-card.swap{opacity:0}
+.sky-count{color:#a99dbd;font-size:13px;letter-spacing:2px;margin-top:10px}
 </style>
 </head>
 
@@ -449,6 +461,14 @@ body{
             </div>
 
         </article>
+
+        <section class="sky" id="sky">
+            <div class="sky-title">Созвездие для тебя</div>
+            <div class="sky-sub" id="skySub">потяни, чтобы покрутить · нажми на звезду</div>
+            <div class="sky-wrap"><canvas id="skyCv"></canvas></div>
+            <div class="sky-card" id="skyCard">в каждой звезде есть что-то для тебя</div>
+            <div class="sky-count" id="skyCount"></div>
+        </section>
 
     </div>
 
@@ -675,6 +695,188 @@ b.addEventListener(
     openLetter
 );
 
+</script>
+
+<script>
+(function(){
+var T=[
+'У тебя очень красивые глаза',
+'Классный голос, его приятно слушать',
+'С тобой очень приятно общаться',
+'У тебя замечательная улыбка',
+'У тебя очень классный стиль',
+'У тебя шикарные волосы',
+'У тебя отличное чувство юмора',
+'Ты очень умная, и это сразу видно',
+'Ты добрая, и это чувствуется во всём',
+'Ты стараешься даже тогда, когда тяжело, и это достойно уважения',
+'Ты настоящая, и в этом твоя сила',
+'С тобой легко быть самим собой',
+'Ты очень интересная девушка',
+'Ты красиво выглядишь, даже когда не замечаешь этого',
+'Ты вдохновляешь, даже не пытаясь',
+'Ты милая',
+'У тебя огромное терпение',
+'Ты заслуживаешь всего самого хорошего',
+'У тебя хороший вкус',
+'Ты просто классная, и этого достаточно'
+];
+var N=T.length,links=[],P=[],i;
+var sky=document.getElementById('sky'),cv=document.getElementById('skyCv'),ctx=cv.getContext('2d');
+var card=document.getElementById('skyCard'),cnt=document.getElementById('skyCount');
+var S=[[-26,-4,6],[-20,8,-8],[-14,-10,10],[-10,2,-4],[-6,14,8],[-3,-14,-10],[0,-3,14],[4,10,-12],[8,-6,2],[11,17,6],[14,2,-14],[17,-12,8],[20,8,12],[24,-3,-6],[-17,16,2],[-23,-16,-4],[6,-18,-6],[-1,8,-2],[26,14,-12],[13,-19,-10]];
+S.forEach(function(c){P.push({x:c[0],y:c[1],z:c[2],ph:Math.random()*6.28,m:.8+Math.random()*.5,seen:false,sx:0,sy:0,d:0,s:1});});
+function D(a,b){var A=P[a],B=P[b],x=A.x-B.x,y=A.y-B.y,z=A.z-B.z;return Math.sqrt(x*x+y*y+z*z);}
+var used={0:1},inT=[0],key={};
+while(inT.length<N){
+  var bd=1e9,ba=-1,bb=-1;
+  inT.forEach(function(a){for(var b=0;b<N;b++){if(used[b])continue;var d=D(a,b);if(d<bd){bd=d;ba=a;bb=b;}}});
+  links.push([ba,bb]);key[ba+'-'+bb]=1;key[bb+'-'+ba]=1;used[bb]=1;inT.push(bb);
+}
+var rest=[];
+for(var a=0;a<N;a++)for(var b=a+1;b<N;b++)if(!key[a+'-'+b])rest.push([a,b,D(a,b)]);
+rest.sort(function(u,v){return u[2]-v[2];});
+rest.slice(0,5).forEach(function(r){if(r[2]<24)links.push([r[0],r[1]]);});
+var dust=[];for(i=0;i<70;i++)dust.push({x:Math.random(),y:Math.random(),r:.3+Math.random()*.9,ph:Math.random()*6.28});
+
+var W=0,H=0,dpr=1,ang=.5,vel=0,tilt=-.25,heartK=0,flash=0,finaleEnd=0,lastShoot=0,shoots=[],done=false,found=false,hintTxt='покрути, чтобы найти сердце · нажми на звезду',sub=document.getElementById('skySub'),drag=false,lastX=0,mv=0,sel=-1,opened=0,started=false;
+cnt.textContent='открыто 0 из '+N;
+
+function resize(){
+  var r=cv.getBoundingClientRect();
+  dpr=Math.min(window.devicePixelRatio||1,2);
+  W=r.width;H=r.height;
+  cv.width=W*dpr;cv.height=H*dpr;
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+}
+
+function project(){
+  var sc=W/72,ca=Math.cos(ang),sa=Math.sin(ang),ct=Math.cos(tilt),st=Math.sin(tilt);
+  P.forEach(function(p){
+    var x1=p.x*ca+p.z*sa,z1=-p.x*sa+p.z*ca;
+    var y1=p.y*ct-z1*st,z2=p.y*st+z1*ct;
+    var s=1+z2/220;
+    p.sx=W/2+x1*sc;p.sy=H/2+y1*sc;p.d=z2;p.s=s;
+  });
+}
+
+function draw(time){
+  ctx.clearRect(0,0,W,H);
+  var g=ctx.createRadialGradient(W/2,H/2,0,W/2,H/2,W*.5);
+  g.addColorStop(0,'rgba(255,92,170,'+(.06+.14*heartK)+')');
+  g.addColorStop(.55,'rgba(157,76,255,.05)');
+  g.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+  dust.forEach(function(d){
+    ctx.fillStyle='rgba(220,200,255,'+(.15+.25*(.5+.5*Math.sin(time/900+d.ph)))+')';
+    ctx.beginPath();ctx.arc(d.x*W,d.y*H,d.r,0,6.2832);ctx.fill();
+  });
+  links.forEach(function(l){
+    var a=P[l[0]],b=P[l[1]];
+    var aa=Math.max(.06,Math.min(.55,.2+.35*(a.d+10)/20));
+    var ab=Math.max(.06,Math.min(.55,.2+.35*(b.d+10)/20));
+    aa*=1+heartK*.8;ab*=1+heartK*.8;var lg=ctx.createLinearGradient(a.sx,a.sy,b.sx,b.sy);
+    lg.addColorStop(0,'rgba(255,190,235,'+aa+')');
+    lg.addColorStop(.5,'rgba(255,190,235,'+Math.min(aa,ab)*.45+')');
+    lg.addColorStop(1,'rgba(255,190,235,'+ab+')');
+    ctx.strokeStyle=lg;ctx.lineWidth=.7;
+    ctx.beginPath();ctx.moveTo(a.sx,a.sy);ctx.lineTo(b.sx,b.sy);ctx.stroke();
+  });
+  shoots.forEach(function(q){var tx=q.x-q.vx*9,ty=q.y-q.vy*9;var sg=ctx.createLinearGradient(q.x,q.y,tx,ty);sg.addColorStop(0,'rgba(255,255,255,'+q.life*.9+')');sg.addColorStop(1,'rgba(255,255,255,0)');ctx.strokeStyle=sg;ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(q.x,q.y);ctx.lineTo(tx,ty);ctx.stroke();});
+  var order=P.map(function(p,k){return k}).sort(function(a,b){return P[a].d-P[b].d});
+  order.forEach(function(k){
+    var p=P[k],tw=.82+.18*Math.sin(time/600+p.ph);
+    var da=Math.max(.5,Math.min(1,.55+.45*(p.d+10)/20));
+    var r=(p.seen?2.6:2.1)*p.m*p.s;
+    var col=p.seen?'255,176,224':'225,210,255';
+    var hr=r*(p.seen?9:7)*tw*(1+flash*1.2);
+    var h=ctx.createRadialGradient(p.sx,p.sy,0,p.sx,p.sy,hr);
+    h.addColorStop(0,'rgba('+col+','+.5*da+')');
+    h.addColorStop(1,'rgba('+col+',0)');
+    ctx.fillStyle=h;
+    ctx.beginPath();ctx.arc(p.sx,p.sy,hr,0,6.2832);ctx.fill();
+    var L=r*(p.seen?6:4.5)*tw*(1+flash*.8);
+    ctx.strokeStyle='rgba('+col+','+.7*da+')';ctx.lineWidth=.8;
+    ctx.beginPath();
+    ctx.moveTo(p.sx-L,p.sy);ctx.lineTo(p.sx+L,p.sy);
+    ctx.moveTo(p.sx,p.sy-L);ctx.lineTo(p.sx,p.sy+L);
+    ctx.stroke();
+    ctx.strokeStyle='rgba('+col+','+.35*da+')';ctx.lineWidth=.6;
+    ctx.beginPath();
+    ctx.moveTo(p.sx-L*.5,p.sy-L*.5);ctx.lineTo(p.sx+L*.5,p.sy+L*.5);
+    ctx.moveTo(p.sx-L*.5,p.sy+L*.5);ctx.lineTo(p.sx+L*.5,p.sy-L*.5);
+    ctx.stroke();
+    ctx.fillStyle='rgba(255,255,255,'+da+')';
+    ctx.beginPath();ctx.arc(p.sx,p.sy,r,0,6.2832);ctx.fill();
+    if(k===sel){
+      var pr=(time/20%14);
+      ctx.strokeStyle='rgba(255,150,210,'+(.7-pr/20)+')';ctx.lineWidth=1;
+      ctx.beginPath();ctx.arc(p.sx,p.sy,r+6+pr,0,6.2832);ctx.stroke();
+    }
+  });
+}
+
+function loop(time){
+  if(!drag){vel*=.94;if(Math.abs(vel)<.0002)vel=0;}flash*=.985;heartK=flash;if(time<finaleEnd&&time-lastShoot>320){lastShoot=time;shoots.push({x:Math.random()*W*1.1,y:-10+Math.random()*H*.35,vx:-(3.5+Math.random()*2.5),vy:2+Math.random()*1.5,life:1});}shoots.forEach(function(q){q.x+=q.vx;q.y+=q.vy;q.life-=.014;});shoots=shoots.filter(function(q){return q.life>0;});
+  ang+=vel;
+  project();draw(time);
+  requestAnimationFrame(loop);
+}
+
+function pick(e){
+  var r=cv.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;
+  var best=-1,bd=38*38;
+  P.forEach(function(p,k){
+    var dx=p.sx-x,dy=p.sy-y,dd=dx*dx+dy*dy;
+    if(dd<bd){bd=dd;best=k;}
+  });
+  if(best<0)return;
+  sel=best;
+  if(!P[best].seen){P[best].seen=true;opened++;}
+  card.classList.add('swap');
+  setTimeout(function(){card.textContent=T[best];card.classList.remove('swap');},180);
+  cnt.textContent=opened===N?'ты открыла все '+N+' звёзд ✦':'открыто '+opened+' из '+N;
+  if(opened===N&&!done){
+    done=true;
+    setTimeout(function(){flash=1;finaleEnd=performance.now()+6000;},500);
+    setTimeout(function(){card.classList.add('swap');setTimeout(function(){card.textContent='Ты открыла все звёзды ✦ Надеюсь, настроение стало хоть чуточку лучше';card.classList.remove('swap');},350);},2800);
+  }
+}
+
+cv.addEventListener('pointerdown',function(e){
+  drag=true;mv=0;lastX=e.clientX;
+  try{cv.setPointerCapture(e.pointerId);}catch(x){}
+});
+cv.addEventListener('pointermove',function(e){
+  if(!drag)return;
+  var dx=e.clientX-lastX;lastX=e.clientX;
+  mv+=Math.abs(dx);
+  ang+=dx*.005;
+  vel=Math.max(-.04,Math.min(.04,dx*.005));
+});
+cv.addEventListener('pointerup',function(e){
+  drag=false;
+  if(mv<6)pick(e);
+});
+cv.addEventListener('pointercancel',function(){drag=false;});
+window.addEventListener('resize',function(){if(started)resize();});
+
+function start(){
+  if(started)return;
+  started=true;
+  sky.classList.add('on');
+  resize();
+  requestAnimationFrame(function(){requestAnimationFrame(function(){sky.classList.add('show');});});
+  requestAnimationFrame(loop);
+  setTimeout(function(){sky.scrollIntoView({behavior:'smooth',block:'center'});},400);
+}
+
+document.getElementById('openBtn').addEventListener('click',function(){
+  var ps=[].slice.call(document.querySelectorAll('[data-text]'));
+  var d=650+Math.max.apply(null,ps.map(function(p,k){return k*1100+p.dataset.text.length*30;}))+900;
+  setTimeout(start,d);
+});
+})();
 </script>
 
 </body>
